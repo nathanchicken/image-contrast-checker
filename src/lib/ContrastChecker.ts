@@ -8,7 +8,6 @@ import quantize from 'quantize/dist/index.mjs'
 type SelectorOrElement = string | HTMLElement
 
 const AA_SAFE_RATIO = 0.2222222222 // 1/4.5
-const AAA_LARGE_SAFE_RATIO = 0.2222222222 // 1/4.5
 const AA_LARGE_SAFE_RATIO = 0.3333333333 // 1 / 3
 const AAA_SAFE_RATIO = 0.1428571429 // 1 / 7
 
@@ -19,7 +18,6 @@ export interface ContrastReport {
   reference: RGB
   ratio: number
   aa_safe: boolean
-  aaa_large_safe: boolean
   aa_large_safe: boolean
   aaa_safe: boolean
 }
@@ -58,8 +56,12 @@ export default class ImageContrastChecker {
 
   async processElement (colorCount: number = 4): Promise<Array<number[]>> {
     const node = this.checkElement()
-    const { height, width } = node.getBoundingClientRect()
-    const pixels = await toPixelData(node)
+    const height = colorCount * colorCount
+    const width = colorCount * colorCount
+    const pixels = await toPixelData(node, {
+      width,
+      height,
+    })
 
     const rows = []
     for (var y = 0; y < height; ++y) {
@@ -70,6 +72,8 @@ export default class ImageContrastChecker {
         rows.push(Array.from(pixelAtXY).slice(0, 3))
       }
     }
+
+    console.log(pixels.length, rows.length)
 
     const map = quantize(rows, colorCount)
     this.palette = map.palette()
@@ -92,7 +96,6 @@ export default class ImageContrastChecker {
         reference: this.reference,
         ratio,
         aa_safe: ratio        <= AA_SAFE_RATIO,
-        aaa_large_safe: ratio <= AAA_LARGE_SAFE_RATIO,
         aa_large_safe: ratio  <= AA_LARGE_SAFE_RATIO,
         aaa_safe: ratio       <= AAA_SAFE_RATIO
       } as ContrastReport

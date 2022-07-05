@@ -45,9 +45,18 @@ const backgroundColor = ref('#FFFFFF')
 const imageOpacity = ref(100)
 const textExample = ref('Read my great article')
 
-const allPass = computed(() => {
-  if (!details.report.length) return false
-  return details.report.every(({ aa_safe }: ContrastReport) => aa_safe)
+const passes = computed(() => {
+  if (!details.report.length) return {
+    aa_pass: false,
+    aaa_pass: false,
+    aa_large_pass: false,
+  }
+
+  return {
+    aa_pass: details.report.every(({ aa_safe }: ContrastReport) => aa_safe),
+    aaa_pass: details.report.every(({ aaa_safe }: ContrastReport) =>aaa_safe),
+    aa_large_pass: details.report.every(({ aa_large_safe }: ContrastReport) => aa_large_safe),
+  }
 })
 
 const loadImage = async (selector: string) => {
@@ -112,7 +121,7 @@ const loadImage = async (selector: string) => {
           <div class="content" :style="{
             backgroundColor
           }">
-            <img alt="Vue logo" src="/puppy.jpeg" class="cell block" crossorigin="anonymous" :style="{
+            <img alt="Vue logo" src="/puppy.jpeg" class="img block" crossorigin="anonymous" :style="{
               opacity: imageOpacity / 100
             }" />
             <div class="overlay" :style="{
@@ -132,10 +141,14 @@ const loadImage = async (selector: string) => {
 
         <h2>Report</h2>
         <div>
-          Status: {{ allPass ? '✓ Pass' : '❌ Fail' }}
+          Status: <br />
+          aa: {{ passes.aa_pass ? '✓ Pass' : '❌ Fail' }}<br />
+          aaa: {{ passes.aaa_pass ? '✓ Pass' : '❌ Fail' }}<br />
+          aa_large: {{ passes.aa_large_pass ? '✓ Pass' : '❌ Fail' }}<br />
         </div>
         <div>NB: It's a fail if <em>any</em> fail</div>
-        <div class="">
+        <div class="mt-2">
+          <h3>Full Report</h3>
           <div v-for="(report, i) in details.report" :key="`color-${String(i)}`" class="flex items-center mb-4 text-md">
             <div class="swatch mr-2 font-bold items-center flex justify-center text-lg" :style="{
               backgroundColor: `rgb(${(report as ContrastReport).rgb.join(',')})`,
@@ -145,10 +158,9 @@ const loadImage = async (selector: string) => {
             </div>
 
             <div>
-              aa_safe: {{ (report as ContrastReport).aa_safe ? '✓' : '❌' }}<br />
-              aa_safe: {{ (report as ContrastReport).aaa_safe ? '✓' : '❌' }}<br />
-              aaa_large_safe: {{ (report as ContrastReport).aaa_large_safe ? '✓' : '❌' }}<br />
-              aa_large_safe: {{ (report as ContrastReport).aa_large_safe ? '✓' : '❌' }}<br />
+              aa: {{ (report as ContrastReport).aa_safe ? '✓' : '❌' }}<br />
+              aaa: {{ (report as ContrastReport).aaa_safe ? '✓' : '❌' }}<br />
+              aa_large: {{ (report as ContrastReport).aa_large_safe ? '✓' : '❌' }}<br />
               ratio: {{ (report as ContrastReport).ratio }}<br />
             </div>
           </div>
@@ -177,21 +189,16 @@ label {
   }
 }
 
-.cell {
-  width: 200px;
-  height: 200px;
-}
 
-img.cell {
+.img {
   width: 100%;
-  opacity: 0.3;
   height: 100%;
 }
 
 .card-example {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 400px;
+  height: 400px;
   background-color: #fff;
   overflow: hidden;
 }
