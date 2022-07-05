@@ -65,16 +65,8 @@ const loadImage = async (selector: string) => {
   console.time('checked')
   details.debug = await checker.processElement(8) as any
   const rgb = hex2RGB(textColor.value)
-  console.log(rgb)
   details.report = await checker.report(rgb) as any
-  // const img = new Image()
-  console.timeEnd('checked')
-  // img.crossOrigin = 'Anonymous'
-  // img.src = 'https://placekitten.com/200/300'
-
-  // img.addEventListener('load', function () {
-  //   details.result = checker.thief.getPalette(img, 16)
-  // })
+  console.timeEnd('checked')  
 }
 
 </script>
