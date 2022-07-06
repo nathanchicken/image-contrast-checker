@@ -13,6 +13,8 @@ const AAA_SAFE_RATIO = 0.1428571429 // 1 / 7
 
 export type RGB = [number, number, number]
 
+
+
 export interface ContrastReport {
   rgb: RGB
   reference: RGB
@@ -26,16 +28,18 @@ export default class ImageContrastChecker {
   element: HTMLElement | null = null
   clone: HTMLElement | null = null
   palette: RGB[] = []
+  // How many colours to quantize to
+  colorCount: number = 4
 
   // Reference colour to compare the palette against,
   // for example the text colour. Default is black
   reference: RGB = [0, 0, 0]
 
-  constructor (el: SelectorOrElement | undefined) {
-    if (el) this.getElement(el)
+  constructor (el?: SelectorOrElement) {
+    if (el) this.setElement(el)
   }
 
-  getElement (selectorOrElement: SelectorOrElement): void {
+  setElement (selectorOrElement: SelectorOrElement): this {
     if (selectorOrElement instanceof HTMLElement) {
       this.element = selectorOrElement
     } else {
@@ -44,6 +48,8 @@ export default class ImageContrastChecker {
         this.element = el
       }
     }
+
+    return this
   }
 
   checkElement (): HTMLElement | never {
@@ -54,7 +60,15 @@ export default class ImageContrastChecker {
     return this.element
   }
 
-  async processElement (colorCount: number = 4): Promise<Array<number[]>> {
+  setCount (colorCount: number = 4): this {
+    this.colorCount = colorCount
+    return this
+  }
+
+  async getPalette (colorCount: number = this.colorCount): Promise<Array<number[]>> {
+
+    this.setCount(colorCount)
+
     const node = this.checkElement()
     const height = colorCount * colorCount
     const width = colorCount * colorCount
@@ -73,19 +87,24 @@ export default class ImageContrastChecker {
       }
     }
 
-    console.log(pixels.length, rows.length)
-
     const map = quantize(rows, colorCount)
     this.palette = map.palette()
     return this.palette
   }
 
+  /**
+   * Report on the pallete against a reference colour.
+   */
   report (
-    reference: void | [number, number, number]
+    reference: void | [number, number, number] | string
   ): Array<ContrastReport> {
-    if (reference) this.reference = reference
-
-    console.log(reference)
+    if (reference) {
+      if (typeof reference === 'string') {
+        this.reference = this.hex2RGB(reference)
+      } else {
+        this.reference = reference
+      }
+    }
 
     return this.palette.map(rgb => {
       const la = this.luminance(rgb)
@@ -102,7 +121,19 @@ export default class ImageContrastChecker {
     })
   }
 
-  // Credit to: https://dev.to/alvaromontoro/building-your-own-color-contrast-checker-4j7o
+  /**
+   * Run getPalete and this.report for a complete 'run'
+   */
+  async process (reference: void | [number, number, number] | string): Promise<Array<ContrastReport>> {
+    await this.getPalette()
+    return this.report(reference)
+  }
+
+
+  /** 
+   * Calculate the luminance of an RGB array
+   * Credit to: https://dev.to/alvaromontoro/building-your-own-color-contrast-checker-4j7o
+   */ 
   luminance (rgb: RGB = [0, 0, 0]): number {
     var a = rgb.map(function (v) {
       v /= 255
@@ -111,7 +142,35 @@ export default class ImageContrastChecker {
     return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722
   }
 
+  /**
+   * Return the ratio of two luminance values. Use in conjunction with
+   * luminance above
+   */
   ratio (a: number, b: number): number {
     return a > b ? (b + 0.05) / (a + 0.05) : (a + 0.05) / (b + 0.05)
+  }
+
+  /**
+   * Convert a hex string to an array of 3 rgba values
+   */
+  hex2RGB (h: string): RGB {
+    let r = '0',
+      g = '0',
+      b = '0'
+  
+    // 3 digits
+    if (h.length == 4) {
+      r = '0x' + h[1] + h[1]
+      g = '0x' + h[2] + h[2]
+      b = '0x' + h[3] + h[3]
+  
+      // 6 digits
+    } else if (h.length == 7) {
+      r = '0x' + h[1] + h[2]
+      g = '0x' + h[3] + h[4]
+      b = '0x' + h[5] + h[6]
+    }
+  
+    return [+r, +g, +b]
   }
 }

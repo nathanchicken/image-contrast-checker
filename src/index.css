@@ -1,3 +1,50 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+body {
+  @apply bg-almond;
+}
+
+html {
+  font-family: 'Lora', serif;
+}
+
+.copy {
+  
+  h1 {
+    @apply text-3xl font-bold;
+  }
+  
+  h2 {
+    @apply text-2xl font-bold;
+  }
+  
+  * + h2 {
+    @apply mt-6;
+  }
+
+  h1 + * {
+    @apply mt-8;
+  }
+  
+  h2 + * {
+    @apply mt-6;
+  }
+
+  p {
+    @apply max-w-xl;
+    + p {
+      @apply mt-4;
+    }
+  }
+}
+
+:root {
+  --peach: rgb(242, 208, 169);
+  --almond: rgb(241, 227, 211);
+  --onyx: rgb(66, 66, 66);
+  --opal: rgb(153, 193, 185);
+  --pink: rgb(218, 102, 12);
+}
